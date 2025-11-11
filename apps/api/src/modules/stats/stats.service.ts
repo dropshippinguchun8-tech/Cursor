@@ -1,120 +1,137 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../lib/prisma.service";
 import { subDays } from "date-fns";
+import { LeadStatus, UserRole } from "@prisma/client";
 
 @Injectable()
 export class StatsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private scopeFilter(user: any) {
-    switch (user.role) {
-      case "affiliate":
-        return { leads: { some: { userId: user.id } } };
-      case "advertiser":
-        return { advertiserId: user.id };
-      case "targetolog":
-        return { creatives: { some: { ownerId: user.id } } };
-      default:
-        return {};
-    }
-  }
+  async totals(user: { id: string; role: UserRole }) {
+    const leadWhere = this.buildLeadScope(user);
 
-  async totals(user: any) {
-    const offerFilter = this.scopeFilter(user);
-    const [clicks, leads, approved, revenue] = await Promise.all([
-      this.prisma.click.count({
-        where: user.role === "affiliate" ? { userId: user.id } : {}
-      }),
-      this.prisma.lead.count({
-        where: this.leadScope(user)
-      }),
-      this.prisma.lead.count({
-        where: { ...this.leadScope(user), status: "approved" }
-      }),
-      this.prisma.lead.aggregate({
-        where: { ...this.leadScope(user), status: "approved" },
-        _sum: { revenue: true }
-      })
+    const [totalLeads, soldLeads, operatorAssigned] = await Promise.all([
+      this.prisma.lead.count({ where: leadWhere }),
+      this.prisma.lead.count({ where: { ...leadWhere, status: LeadStatus.SOLD } }),
+      this.prisma.lead.count({ where: { ...leadWhere, status: LeadStatus.OPERATOR_ASSIGNED } })
     ]);
 
-    const cr = leads > 0 ? (approved / leads) * 100 : 0;
+    const revenue = await this.calculateRevenue(user, LeadStatus.SOLD);
+    const conversionRate = totalLeads > 0 ? (soldLeads / totalLeads) * 100 : 0;
 
     return {
-      clicks,
-      leads,
-      approved,
-      revenue: revenue._sum.revenue ?? 0,
-      conversionRate: cr
+      leads: totalLeads,
+      soldLeads,
+      inProgress: operatorAssigned,
+      revenue,
+      conversionRate
     };
   }
 
-  async timeseries(user: any, days = 7) {
+  async timeseries(user: { id: string; role: UserRole }, days = 7) {
     const since = subDays(new Date(), days);
-    const clicks = await this.prisma.click.groupBy({
-      by: ["createdAt"],
-      where: {
-        createdAt: { gte: since },
-        ...(user.role === "affiliate" ? { userId: user.id } : {})
-      },
-      _count: { id: true }
-    });
+    const leadWhere = this.buildLeadScope(user);
 
     const leads = await this.prisma.lead.groupBy({
       by: ["createdAt"],
       where: {
-        createdAt: { gte: since },
-        ...this.leadScope(user)
+        ...leadWhere,
+        createdAt: { gte: since }
       },
       _count: { id: true }
     });
 
-    const mapSeries = (series: typeof clicks) =>
+    const sold = await this.prisma.lead.groupBy({
+      by: ["createdAt"],
+      where: {
+        ...leadWhere,
+        status: LeadStatus.SOLD,
+        createdAt: { gte: since }
+      },
+      _count: { id: true }
+    });
+
+    const toSeries = (series: typeof leads) =>
       series
-        .map((row) => ({ date: row.createdAt.toISOString().split("T")[0], value: row._count.id }))
+        .map((row) => ({
+          date: row.createdAt.toISOString().split("T")[0],
+          value: row._count.id
+        }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
     return {
-      clicks: mapSeries(clicks),
-      leads: mapSeries(leads)
+      leads: toSeries(leads),
+      sold: toSeries(sold)
     };
   }
 
-  async top(user: any) {
-    const offerFilter = this.scopeFilter(user);
-    const offers = await this.prisma.offer.findMany({
-      where: offerFilter,
-      include: {
-        _count: {
-          select: {
-            leads: true,
-            clicks: true
-          }
-        },
-        leads: {
-          where: { status: "approved" },
-          select: { revenue: true }
-        }
-      },
-      take: 5
+  async top(user: { id: string; role: UserRole }) {
+    const leadWhere = this.buildLeadScope(user);
+
+    const products = await this.prisma.lead.groupBy({
+      by: ["productId"],
+      where: leadWhere,
+      _count: { id: true }
     });
 
-    return offers.map((offer) => ({
-      id: offer.id,
-      title: offer.title,
-      leads: offer._count.leads,
-      clicks: offer._count.clicks,
-      revenue: offer.leads.reduce((acc, lead) => acc + Number(lead.revenue), 0)
-    }));
+    const sorted = products
+      .filter((p) => p.productId !== null)
+      .sort((a, b) => b._count.id - a._count.id)
+      .slice(0, 5);
+
+    const productIds = sorted.map((p) => p.productId as string);
+    const productDetails = await this.prisma.product.findMany({
+      where: { id: { in: productIds } }
+    });
+
+    return sorted.map((entry) => {
+      const product = productDetails.find((p) => p.id === entry.productId);
+      return {
+        id: entry.productId,
+        title: product?.title ?? "Unassigned product",
+        leads: entry._count.id
+      };
+    });
   }
 
-  private leadScope(user: any) {
+  private buildLeadScope(user: { id: string; role: UserRole }) {
     switch (user.role) {
-      case "affiliate":
-        return { userId: user.id };
-      case "advertiser":
-        return { offer: { advertiserId: user.id } };
+      case UserRole.targetolog:
+        return { targetologistId: user.id };
+      case UserRole.operator:
+        return { OR: [{ operatorId: user.id }, { status: LeadStatus.NEW }] };
+      case UserRole.client:
+        return { clientId: user.id };
       default:
         return {};
     }
+  }
+
+  private async calculateRevenue(user: { id: string; role: UserRole }, status: LeadStatus) {
+    const where = { ...this.buildLeadScope(user), status };
+    if (user.role === UserRole.targetolog) {
+      const result = await this.prisma.lead.aggregate({
+        where,
+        _sum: { commissionTargetologist: true }
+      });
+      return result._sum.commissionTargetologist ?? 0;
+    }
+    if (user.role === UserRole.operator) {
+      const result = await this.prisma.lead.aggregate({
+        where,
+        _sum: { commissionOperator: true }
+      });
+      return result._sum.commissionOperator ?? 0;
+    }
+    const result = await this.prisma.lead.aggregate({
+      where,
+      _sum: {
+        commissionTargetologist: true,
+        commissionOperator: true
+      }
+    });
+    const target = result._sum.commissionTargetologist ?? 0;
+    const operator = result._sum.commissionOperator ?? 0;
+    return Number(target) + Number(operator);
   }
 }

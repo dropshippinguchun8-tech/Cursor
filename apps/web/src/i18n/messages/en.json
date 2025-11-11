@@ -5,7 +5,19 @@
     "logout": "Log out",
     "language": "Language",
     "login": "Sign in",
-    "register": "Sign up"
+    "register": "Sign up",
+    "referralLink": "Referral link",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "balances": "Balances",
+    "holdBalance": "Hold balance",
+    "mainBalance": "Main balance",
+    "latestTransactions": "Latest transactions",
+    "noData": "No data available",
+    "status": "Status",
+    "comment": "Comment",
+    "updated": "Updated",
+    "actions": "Actions"
   },
   "landing": {
     "title": "CPA platform built for Central Asia",
@@ -60,6 +72,25 @@
     "analytics": "Analytics",
     "offers": "Offers",
     "campaigns": "Campaigns",
-    "tickets": "Support tickets"
+    "tickets": "Support tickets",
+    "leadsByStatus": "Leads by status",
+    "leadQueue": "Lead queue",
+    "myLeads": "My leads",
+    "recentLeads": "Recent leads",
+    "statusTimeline": "Status timeline",
+    "salesPerformance": "Sales performance",
+    "topProducts": "Top products",
+    "referralPerformance": "Referral performance",
+    "approvePayout": "Approve payout",
+    "confirmOrder": "Confirm order",
+    "rejectOrder": "Reject order"
+  },
+  "lead_status": {
+    "NEW": "New",
+    "OPERATOR_ASSIGNED": "Operator assigned",
+    "ACCEPTED": "Accepted",
+    "ARCHIVED": "Archived",
+    "SENT": "Sent",
+    "SOLD": "Sold"
   }
 }

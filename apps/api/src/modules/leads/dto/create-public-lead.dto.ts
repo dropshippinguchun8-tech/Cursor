@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsUUID } from "class-validator";
 
-export class CreateLeadDto {
+export class CreatePublicLeadDto {
   @IsString()
   customerName: string;
 
@@ -18,7 +18,4 @@ export class CreateLeadDto {
   @IsOptional()
   @IsUUID()
   productId?: string;
-
-  @IsUUID()
-  targetologistId: string;
 }

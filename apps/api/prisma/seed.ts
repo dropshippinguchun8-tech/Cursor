@@ -8,14 +8,14 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Seeding CPAMaRKeT.Uz database...");
 
+  await prisma.balanceTransaction.deleteMany();
+  await prisma.leadStatusLog.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.ticket.deleteMany();
   await prisma.campaign.deleteMany();
   await prisma.lead.deleteMany();
-  await prisma.click.deleteMany();
-  await prisma.creative.deleteMany();
+  await prisma.balance.deleteMany();
   await prisma.product.deleteMany();
-  await prisma.offer.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.user.deleteMany();
 
@@ -37,6 +37,22 @@ async function main() {
     }
   });
 
+  const targetologist = await prisma.user.create({
+    data: {
+      email: "targetolog@cpamarket.uz",
+      username: "targetolog",
+      passwordHash,
+      role: UserRole.targetolog,
+      status: "active",
+      referralCode: "tg-demo",
+      profile: {
+        create: {
+          fullName: "Targetologist Demo"
+        }
+      }
+    }
+  });
+
   const operator = await prisma.user.create({
     data: {
       email: "operator@cpamarket.uz",
@@ -46,249 +62,228 @@ async function main() {
       status: "active",
       profile: {
         create: {
-          fullName: "Operator Team"
+          fullName: "Operator Demo"
         }
       }
     }
   });
 
-  const targetolog = await prisma.user.create({
+  const client = await prisma.user.create({
     data: {
-      email: "targetolog@cpamarket.uz",
-      username: "targetolog",
+      email: "client@cpamarket.uz",
+      username: "client",
       passwordHash,
-      role: UserRole.targetolog,
+      role: UserRole.client,
       status: "active",
       profile: {
         create: {
-          fullName: "Targetolog Pro"
+          fullName: "Client Demo"
         }
       }
     }
   });
 
-  const advertiser = await prisma.user.create({
+  const product = await prisma.product.create({
     data: {
-      email: "advertiser@cpamarket.uz",
-      username: "advertiser",
-      passwordHash,
-      role: UserRole.advertiser,
-      status: "active",
-      profile: {
-        create: {
-          fullName: "Advertiser Team"
-        }
+      title: "Premium Water Filter",
+      sku: "WF-001",
+      price: 149,
+      currency: "USD",
+      stock: 100,
+      images: [],
+      ownerId: admin.id,
+      commissionTargetologist: 20,
+      commissionOperator: 15
+    }
+  });
+
+  const newLead = await prisma.lead.create({
+    data: {
+      referralCode: targetolog.referralCode!,
+      customerName: "Bekzod Yusupov",
+      customerPhone: "+998901112233",
+      customerEmail: "bekzod@example.com",
+      targetologistId: targetolog.id,
+      productId: product.id,
+      commissionTargetologist: product.commissionTargetologist,
+      commissionOperator: product.commissionOperator,
+      statusLogs: {
+        create: [
+          {
+            newStatus: "NEW",
+            comment: "Lead created from referral form"
+          }
+        ]
       }
     }
   });
 
-  const affiliate1 = await prisma.user.create({
+  const assignedLead = await prisma.lead.create({
     data: {
-      email: "affiliate1@cpamarket.uz",
-      username: "affiliate1",
-      passwordHash,
-      role: UserRole.affiliate,
-      status: "active",
-      profile: {
-        create: {
-          fullName: "Affiliate One"
-        }
+      referralCode: targetolog.referralCode!,
+      customerName: "Dilnoza Karimova",
+      customerPhone: "+998907778899",
+      targetologistId: targetolog.id,
+      operatorId: operator.id,
+      productId: product.id,
+      commissionTargetologist: product.commissionTargetologist,
+      commissionOperator: product.commissionOperator,
+      status: "OPERATOR_ASSIGNED",
+      statusLogs: {
+        create: [
+          {
+            newStatus: "NEW",
+            comment: "Lead created via landing"
+          },
+          {
+            newStatus: "OPERATOR_ASSIGNED",
+            previousStatus: "NEW",
+            actorId: operator.id,
+            comment: "Lead claimed by operator"
+          }
+        ]
       }
     }
   });
 
-  const affiliate2 = await prisma.user.create({
+  const acceptedLead = await prisma.lead.create({
     data: {
-      email: "affiliate2@cpamarket.uz",
-      username: "affiliate2",
-      passwordHash,
-      role: UserRole.affiliate,
-      status: "active",
-      profile: {
-        create: {
-          fullName: "Affiliate Two"
-        }
+      referralCode: targetolog.referralCode!,
+      customerName: "Javlon Sodiqov",
+      customerPhone: "+998935551122",
+      targetologistId: targetolog.id,
+      operatorId: operator.id,
+      productId: product.id,
+      commissionTargetologist: product.commissionTargetologist,
+      commissionOperator: product.commissionOperator,
+      status: "ACCEPTED",
+      statusLogs: {
+        create: [
+          {
+            newStatus: "NEW",
+            comment: "Lead captured during webinar"
+          },
+          {
+            newStatus: "OPERATOR_ASSIGNED",
+            previousStatus: "NEW",
+            actorId: operator.id,
+            comment: "Operator assigned"
+          },
+          {
+            newStatus: "ACCEPTED",
+            previousStatus: "OPERATOR_ASSIGNED",
+            actorId: operator.id,
+            comment: "Client confirmed availability"
+          }
+        ]
       }
     }
   });
 
-  const offers = await prisma.offer.createMany({
+  const soldLead = await prisma.lead.create({
+    data: {
+      referralCode: targetolog.referralCode!,
+      customerName: "Madina Ergasheva",
+      customerPhone: "+998901234567",
+      targetologistId: targetolog.id,
+      operatorId: operator.id,
+      clientId: client.id,
+      productId: product.id,
+      commissionTargetologist: product.commissionTargetologist,
+      commissionOperator: product.commissionOperator,
+      status: "SOLD",
+      statusLogs: {
+        create: [
+          {
+            newStatus: "NEW",
+            comment: "Lead captured"
+          },
+          {
+            newStatus: "OPERATOR_ASSIGNED",
+            previousStatus: "NEW",
+            actorId: operator.id,
+            comment: "Operator claimed the lead"
+          },
+          {
+            newStatus: "ACCEPTED",
+            previousStatus: "OPERATOR_ASSIGNED",
+            actorId: operator.id,
+            comment: "Client confirmed order"
+          },
+          {
+            newStatus: "SENT",
+            previousStatus: "ACCEPTED",
+            actorId: admin.id,
+            comment: "Order dispatched"
+          },
+          {
+            newStatus: "SOLD",
+            previousStatus: "SENT",
+            actorId: admin.id,
+            comment: "Order delivered and paid"
+          }
+        ]
+      }
+    }
+  });
+
+  await prisma.balance.create({
+    data: {
+      userId: targetolog.id,
+      holdBalance: product.commissionTargetologist,
+      mainBalance: 0
+    }
+  });
+
+  await prisma.balance.create({
+    data: {
+      userId: operator.id,
+      holdBalance: product.commissionOperator,
+      mainBalance: 0
+    }
+  });
+
+  await prisma.balanceTransaction.createMany({
     data: [
       {
-        title: "Fintech Loan Offer",
-        description: "High converting loan offer for CIS region",
-        payout: 25,
-        link: "https://cpamarket.uz/offers/fintech",
-        advertiserId: advertiser.id,
-        vertical: "Finance",
-        geo: "UZ",
-        dailyCap: 100
+        userId: targetolog.id,
+        leadId: soldLead.id,
+        amount: product.commissionTargetologist,
+        balanceType: "hold",
+        direction: "credit",
+        reason: "Commission awaiting admin approval"
       },
       {
-        title: "E-commerce Gadget Sale",
-        description: "Electronics gadgets affiliate program",
-        payout: 15,
-        link: "https://cpamarket.uz/offers/gadgets",
-        advertiserId: advertiser.id,
-        vertical: "E-commerce",
-        geo: "UZ",
-        dailyCap: 250
-      },
-      {
-        title: "Education Accredited Course",
-        description: "Online course lead generation",
-        payout: 30,
-        link: "https://cpamarket.uz/offers/education",
-        advertiserId: advertiser.id,
-        vertical: "Education",
-        geo: "RU",
-        dailyCap: 120
+        userId: operator.id,
+        leadId: soldLead.id,
+        amount: product.commissionOperator,
+        balanceType: "hold",
+        direction: "credit",
+        reason: "Commission awaiting admin approval"
       }
     ]
-  });
-
-  const createdOffers = await prisma.offer.findMany({
-    where: { advertiserId: advertiser.id }
-  });
-
-  await prisma.product.createMany({
-    data: [
-      {
-        title: "SmartWatch Pro",
-        sku: "SW-001",
-        price: 199,
-        currency: "USD",
-        stock: 50,
-        images: [],
-        ownerId: advertiser.id,
-        offerId: createdOffers[1].id
-      },
-      {
-        title: "Fitness Tracker",
-        sku: "FT-101",
-        price: 99,
-        currency: "USD",
-        stock: 120,
-        images: [],
-        ownerId: advertiser.id,
-        offerId: createdOffers[1].id
-      },
-      {
-        title: "Premium Course Bundle",
-        sku: "EDU-202",
-        price: 299,
-        currency: "USD",
-        stock: 999,
-        images: [],
-        ownerId: advertiser.id,
-        offerId: createdOffers[2].id
-      }
-    ]
-  });
-
-  await prisma.creative.createMany({
-    data: [
-      {
-        offerId: createdOffers[0].id,
-        type: "banner",
-        url: "https://cdn.cpamarket.uz/creatives/fintech-banner.png",
-        ownerId: targetolog.id
-      },
-      {
-        offerId: createdOffers[1].id,
-        type: "video",
-        url: "https://cdn.cpamarket.uz/creatives/gadget-video.mp4",
-        ownerId: targetolog.id
-      },
-      {
-        offerId: createdOffers[2].id,
-        type: "text",
-        url: "Enroll now and get 20% off",
-        ownerId: targetolog.id
-      }
-    ]
-  });
-
-  const clickSeed = [];
-  for (let i = 0; i < 20; i++) {
-    clickSeed.push({
-      offerId: createdOffers[i % createdOffers.length].id,
-      userId: i % 2 === 0 ? affiliate1.id : affiliate2.id,
-      ip: `192.168.1.${i}`,
-      userAgent: "Mozilla/5.0",
-      referer: "https://partner.landing.com",
-      subId: `sub${i}`
-    });
-  }
-  await prisma.click.createMany({ data: clickSeed });
-
-  const leadSeed = [];
-  for (let i = 0; i < 10; i++) {
-    leadSeed.push({
-      offerId: createdOffers[i % createdOffers.length].id,
-      userId: i % 2 === 0 ? affiliate1.id : affiliate2.id,
-      status: i % 3 === 0 ? "approved" : "pending",
-      revenue: i % 3 === 0 ? 25 : 0,
-      txId: `TX-${1000 + i}`,
-      meta: {},
-      approvedAt: i % 3 === 0 ? new Date() : null
-    });
-  }
-  await prisma.lead.createMany({ data: leadSeed });
-
-  await prisma.payout.createMany({
-    data: [
-      {
-        affiliateId: affiliate1.id,
-        period: "2025-01",
-        amount: 250,
-        status: "paid",
-        paidAt: addDays(new Date(), -10)
-      },
-      {
-        affiliateId: affiliate2.id,
-        period: "2025-01",
-        amount: 180,
-        status: "pending"
-      }
-    ]
-  });
-
-  await prisma.campaign.create({
-    data: {
-      name: "Spring Gadget Campaign",
-      budget: 1500,
-      bid: 2.5,
-      startAt: addDays(new Date(), -7),
-      endAt: addDays(new Date(), 21),
-      status: "active",
-      targetologId: targetolog.id
-    }
-  });
-
-  await prisma.ticket.create({
-    data: {
-      subject: "Need new creatives",
-      body: "Please upload fresh banners for the gadget offer.",
-      authorId: affiliate1.id,
-      assigneeId: operator.id,
-      status: "in_progress"
-    }
   });
 
   await prisma.notification.createMany({
     data: [
       {
-        userId: affiliate1.id,
-        type: "offer",
-        payload: { message: "New gadget offer launched" }
+        userId: operator.id,
+        type: "system",
+        payload: { message: "New lead available in the queue." }
       },
       {
-        userId: advertiser.id,
-        type: "payout",
-        payload: { message: "Monthly payout summary ready" }
+        userId: targetolog.id,
+        type: "system",
+        payload: { message: "Your referral link: https://cpamarket.uz/lead/tg-demo" }
       }
     ]
+  });
+
+  console.log("Seeded leads:", {
+    newLead: newLead.id,
+    assignedLead: assignedLead.id,
+    acceptedLead: acceptedLead.id,
+    soldLead: soldLead.id
   });
 
   console.log("✅ Seed completed.");

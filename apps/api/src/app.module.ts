@@ -23,6 +23,7 @@ import { NotificationsModule } from "./modules/notifications/notifications.modul
 import { TicketsModule } from "./modules/tickets/tickets.module";
 import { AuditModule } from "./modules/audit/audit.module";
 import { UploadsModule } from "./modules/uploads/uploads.module";
+import { BalancesModule } from "./modules/balances/balances.module";
 import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { RolesGuard } from "./common/guards/roles.guard";
@@ -100,7 +101,8 @@ import { ResponseInterceptor } from "./common/interceptors/response.interceptor"
     NotificationsModule,
     TicketsModule,
     AuditModule,
-    UploadsModule
+    UploadsModule,
+    BalancesModule
   ],
   providers: [
     PrismaService,

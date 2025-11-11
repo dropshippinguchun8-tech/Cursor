@@ -5,7 +5,19 @@
     "logout": "Выйти",
     "language": "Язык",
     "login": "Войти",
-    "register": "Регистрация"
+    "register": "Регистрация",
+    "referralLink": "Реферальная ссылка",
+    "copy": "Копировать",
+    "copied": "Скопировано!",
+    "balances": "Балансы",
+    "holdBalance": "Холд баланс",
+    "mainBalance": "Основной баланс",
+    "latestTransactions": "Последние операции",
+    "noData": "Данные отсутствуют",
+    "status": "Статус",
+    "comment": "Комментарий",
+    "updated": "Обновлено",
+    "actions": "Действия"
   },
   "landing": {
     "title": "CPA-платформа для digital-маркетинга в Узбекистане",
@@ -60,6 +72,25 @@
     "analytics": "Аналитика",
     "offers": "Офферы",
     "campaigns": "Кампании",
-    "tickets": "Поддержка"
+    "tickets": "Поддержка",
+    "leadsByStatus": "Лиды по статусам",
+    "leadQueue": "Очередь лидов",
+    "myLeads": "Мои лиды",
+    "recentLeads": "Последние лиды",
+    "statusTimeline": "История статусов",
+    "salesPerformance": "Продажи",
+    "topProducts": "Топ продукты",
+    "referralPerformance": "Эффективность трафика",
+    "approvePayout": "Подтвердить выплату",
+    "confirmOrder": "Подтвердить заказ",
+    "rejectOrder": "Отклонить заказ"
+  },
+  "lead_status": {
+    "NEW": "Новый",
+    "OPERATOR_ASSIGNED": "Назначен оператор",
+    "ACCEPTED": "Подтвержден",
+    "ARCHIVED": "Архив",
+    "SENT": "Отправлен",
+    "SOLD": "Продан"
   }
 }

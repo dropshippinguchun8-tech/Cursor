@@ -5,7 +5,19 @@
     "logout": "Chiqish",
     "language": "Til",
     "login": "Kirish",
-    "register": "Ro'yxatdan o'tish"
+    "register": "Ro'yxatdan o'tish",
+    "referralLink": "Referral havola",
+    "copy": "Ko'chirish",
+    "copied": "Ko'chirildi!",
+    "balances": "Balanslar",
+    "holdBalance": "Kutilayotgan balans",
+    "mainBalance": "Asosiy balans",
+    "latestTransactions": "So'nggi tranzaksiyalar",
+    "noData": "Ma'lumot topilmadi",
+    "status": "Status",
+    "comment": "Izoh",
+    "updated": "Yangilandi",
+    "actions": "Harakatlar"
   },
   "landing": {
     "title": "O'zbekistondagi raqamli marketing uchun CPA platforma",
@@ -60,6 +72,25 @@
     "analytics": "Analitika",
     "offers": "Tadbiqlar",
     "campaigns": "Kampaniyalar",
-    "tickets": "Qo'llab-quvvatlash chiptalari"
+    "tickets": "Qo'llab-quvvatlash chiptalari",
+    "leadsByStatus": "Status bo'yicha liderlar",
+    "leadQueue": "Yangi liderlar",
+    "myLeads": "Mening liderlarim",
+    "recentLeads": "So'nggi liderlar",
+    "statusTimeline": "Status tarixi",
+    "salesPerformance": "Sotuv natijalari",
+    "topProducts": "Eng faol mahsulotlar",
+    "referralPerformance": "Referral natijalari",
+    "approvePayout": "To'lovni tasdiqlash",
+    "confirmOrder": "Buyurtmani tasdiqlash",
+    "rejectOrder": "Bekor qilish"
+  },
+  "lead_status": {
+    "NEW": "Yangi",
+    "OPERATOR_ASSIGNED": "Operator belgilandi",
+    "ACCEPTED": "Tasdiqlandi",
+    "ARCHIVED": "Arxivga o'tkazildi",
+    "SENT": "Yuborildi",
+    "SOLD": "Sotildi"
   }
 }

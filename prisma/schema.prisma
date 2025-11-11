@@ -11,6 +11,7 @@ enum UserRole {
   admin
   operator
   targetolog
+  client
   advertiser
   affiliate
 }
@@ -28,9 +29,22 @@ enum OfferStatus {
 }
 
 enum LeadStatus {
-  pending
-  approved
-  rejected
+  NEW
+  OPERATOR_ASSIGNED
+  ACCEPTED
+  ARCHIVED
+  SENT
+  SOLD
+}
+
+enum BalanceType {
+  hold
+  main
+}
+
+enum TransactionDirection {
+  credit
+  debit
 }
 
 enum PayoutStatus {
@@ -69,14 +83,20 @@ model User {
   updatedAt        DateTime          @updatedAt
   lastLoginAt      DateTime?
   twoFactorSecret  String?
+  referralCode     String?           @unique
   profile          Profile?
   offers           Offer[]           @relation("AdvertiserOffers")
   products         Product[]
   creatives        Creative[]        @relation("CreativeOwner")
   clicks           Click[]           @relation("ClickAffiliate")
-  leads            Lead[]            @relation("LeadAffiliate")
   campaigns        Campaign[]        @relation("CampaignTargetolog")
   payouts          Payout[]          @relation("PayoutAffiliate")
+  targetologistLeads Lead[]          @relation("LeadTargetologist")
+  operatorLeads    Lead[]            @relation("LeadOperator")
+  clientLeads      Lead[]            @relation("LeadClient")
+  statusLogs       LeadStatusLog[]   @relation("LeadStatusActor")
+  balance          Balance?
+  balanceTransactions BalanceTransaction[]
   notifications    Notification[]
   ticketsAuthored  Ticket[]          @relation("TicketAuthor")
   ticketsAssigned  Ticket[]          @relation("TicketAssignee")
@@ -174,21 +194,73 @@ model Click {
 }
 
 model Lead {
-  id          String      @id @default(uuid())
-  user        User        @relation("LeadAffiliate", fields: [userId], references: [id])
-  userId      String
-  offer       Offer       @relation(fields: [offerId], references: [id])
-  offerId     String
-  status      LeadStatus  @default(pending)
-  revenue     Decimal     @default(0)
-  txId        String?     @unique
-  meta        Json?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  approvedAt  DateTime?
+  id                     String      @id @default(uuid())
+  referralCode           String
+  customerName           String
+  customerPhone          String
+  customerEmail          String?
+  notes                  Json?
+  status                 LeadStatus  @default(NEW)
+  targetologist          User        @relation("LeadTargetologist", fields: [targetologistId], references: [id])
+  targetologistId        String
+  operator               User?       @relation("LeadOperator", fields: [operatorId], references: [id])
+  operatorId             String?
+  client                 User?       @relation("LeadClient", fields: [clientId], references: [id])
+  clientId               String?
+  product                Product?    @relation(fields: [productId], references: [id])
+  productId              String?
+  commissionTargetologist Decimal    @default(0)
+  commissionOperator     Decimal     @default(0)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  statusLogs             LeadStatusLog[]
+  transactions           BalanceTransaction[]
 
-  @@index([offerId, status])
-  @@index([userId, status])
+  @@index([targetologistId, status])
+  @@index([operatorId, status])
+  @@index([status, createdAt])
+}
+
+model Balance {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @unique
+  holdBalance Decimal  @default(0)
+  mainBalance Decimal  @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  transactions BalanceTransaction[]
+}
+
+model BalanceTransaction {
+  id          String               @id @default(uuid())
+  user        User                 @relation(fields: [userId], references: [id])
+  userId      String
+  lead        Lead?                @relation(fields: [leadId], references: [id])
+  leadId      String?
+  amount      Decimal
+  balanceType BalanceType
+  direction   TransactionDirection
+  reason      String?
+  createdAt   DateTime             @default(now())
+
+  @@index([userId, createdAt])
+  @@index([leadId])
+}
+
+model LeadStatusLog {
+  id             String      @id @default(uuid())
+  lead           Lead        @relation(fields: [leadId], references: [id])
+  leadId         String
+  actor          User?       @relation("LeadStatusActor", fields: [actorId], references: [id])
+  actorId        String?
+  previousStatus LeadStatus?
+  newStatus      LeadStatus
+  comment        String
+  createdAt      DateTime    @default(now())
+
+  @@index([leadId])
+  @@index([actorId])
 }
 
 model Payout {

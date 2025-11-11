@@ -10,7 +10,7 @@ process.env.DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:po
 describe("StatsController (e2e)", () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let affiliateToken: string;
+  let targetologToken: string;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -22,57 +22,66 @@ describe("StatsController (e2e)", () => {
     await app.init();
 
     prisma = app.get(PrismaService);
+    await prisma.leadStatusLog.deleteMany();
+    await prisma.balanceTransaction.deleteMany();
     await prisma.lead.deleteMany();
-    await prisma.click.deleteMany();
-    await prisma.offer.deleteMany();
+    await prisma.balance.deleteMany();
+    await prisma.product.deleteMany();
     await prisma.user.deleteMany();
 
-    const affiliate = await prisma.user.create({
+    const targetolog = await prisma.user.create({
       data: {
-        email: "affiliate@test.com",
-        username: "aff",
+        email: "tg@test.com",
+        username: "tg",
         passwordHash: await argon2.hash("Password123"),
-        role: "affiliate",
+        role: "targetolog",
+        status: "active",
+        referralCode: "test-ref"
+      }
+    });
+
+    const operator = await prisma.user.create({
+      data: {
+        email: "op@test.com",
+        username: "op",
+        passwordHash: await argon2.hash("Password123"),
+        role: "operator",
         status: "active"
       }
     });
 
-    const advertiser = await prisma.user.create({
+    const product = await prisma.product.create({
       data: {
-        email: "adv@test.com",
-        username: "adv",
-        passwordHash: await argon2.hash("Password123"),
-        role: "advertiser",
-        status: "active"
+        title: "Demo Product",
+        sku: "DP-01",
+        price: 100,
+        currency: "USD",
+        stock: 10,
+        images: [],
+        ownerId: targetolog.id,
+        commissionTargetologist: 20,
+        commissionOperator: 15
       }
-    });
-
-    const offer = await prisma.offer.create({
-      data: {
-        title: "Stats Offer",
-        description: "Test stats",
-        payout: 10,
-        link: "https://example.com",
-        advertiserId: advertiser.id,
-        vertical: "Finance",
-        geo: "UZ"
-      }
-    });
-
-    await prisma.click.createMany({
-      data: Array.from({ length: 5 }).map(() => ({
-        offerId: offer.id,
-        userId: affiliate.id,
-        ip: "127.0.0.1"
-      }))
     });
 
     await prisma.lead.create({
       data: {
-        offerId: offer.id,
-        userId: affiliate.id,
-        status: "approved",
-        revenue: 10
+        referralCode: targetolog.referralCode!,
+        customerName: "QA Test",
+        customerPhone: "+998900000000",
+        targetologistId: targetolog.id,
+        operatorId: operator.id,
+        productId: product.id,
+        commissionTargetologist: product.commissionTargetologist,
+        commissionOperator: product.commissionOperator,
+        status: "SOLD",
+        statusLogs: {
+          create: [
+            { newStatus: "NEW", comment: "Created for stats test" },
+            { newStatus: "OPERATOR_ASSIGNED", previousStatus: "NEW", actorId: operator.id, comment: "Claimed" },
+            { newStatus: "SOLD", previousStatus: "OPERATOR_ASSIGNED", actorId: operator.id, comment: "Closed" }
+          ]
+        }
       }
     });
 
@@ -84,10 +93,10 @@ describe("StatsController (e2e)", () => {
       .post("/api/auth/login")
       .set("Cookie", cookie)
       .set("x-csrf-token", csrfToken)
-      .send({ email: affiliate.email, password: "Password123" })
+      .send({ email: targetolog.email, password: "Password123" })
       .expect(201);
 
-    affiliateToken = login.body.data.accessToken;
+    targetologToken = login.body.data.accessToken;
   });
 
   afterAll(async () => {
@@ -95,13 +104,13 @@ describe("StatsController (e2e)", () => {
     await prisma.$disconnect();
   });
 
-  it("returns totals for affiliate", async () => {
+  it("returns totals for targetologist", async () => {
     const response = await request(app.getHttpServer())
       .get("/api/stats/totals")
-      .set("Authorization", `Bearer ${affiliateToken}`)
+      .set("Authorization", `Bearer ${targetologToken}`)
       .expect(200);
 
-    expect(response.body.data.clicks).toBeGreaterThan(0);
+    expect(response.body.data.leads).toBeGreaterThan(0);
     expect(response.body.data.revenue).toBeGreaterThan(0);
   });
 });
