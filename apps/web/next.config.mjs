@@ -1,12 +1,11 @@
-import createNextIntlPlugin from "next-intl/plugin";
-
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+import nextI18NextConfig from "./next-i18next.config.mjs";
 
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
     serverActions: true
-  }
+  },
+  i18n: nextI18NextConfig.i18n
 };
 
-export default withNextIntl(nextConfig);
+export default nextConfig;

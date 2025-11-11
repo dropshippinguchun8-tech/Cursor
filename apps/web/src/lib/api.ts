@@ -28,3 +28,24 @@ export async function apiFetch<T>(path: string, options: FetchOptions = {}): Pro
   const json = await response.json();
   return json.data as T;
 }
+
+export async function clientApiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers ?? {});
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers,
+    credentials: "include",
+    cache: "no-store"
+  });
+
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body?.detail ?? "Request failed");
+  }
+
+  return body.data as T;
+}

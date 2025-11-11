@@ -10,7 +10,7 @@ datasource db {
 enum UserRole {
   admin
   operator
-  targetolog
+  targetologist
   client
   advertiser
   affiliate
@@ -39,7 +39,7 @@ enum LeadStatus {
 
 enum BalanceType {
   hold
-  main
+  confirmed
 }
 
 enum TransactionDirection {
@@ -84,6 +84,8 @@ model User {
   lastLoginAt      DateTime?
   twoFactorSecret  String?
   referralCode     String?           @unique
+  holdBalance      Decimal           @default(0)
+  mainBalance      Decimal           @default(0)
   profile          Profile?
   offers           Offer[]           @relation("AdvertiserOffers")
   products         Product[]
@@ -95,7 +97,6 @@ model User {
   operatorLeads    Lead[]            @relation("LeadOperator")
   clientLeads      Lead[]            @relation("LeadClient")
   statusLogs       LeadStatusLog[]   @relation("LeadStatusActor")
-  balance          Balance?
   balanceTransactions BalanceTransaction[]
   notifications    Notification[]
   ticketsAuthored  Ticket[]          @relation("TicketAuthor")
@@ -158,6 +159,7 @@ model Product {
   ownerId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  leads       Lead[]
 
   @@index([ownerId])
 }
@@ -199,6 +201,7 @@ model Lead {
   customerName           String
   customerPhone          String
   customerEmail          String?
+  comment                String?
   notes                  Json?
   status                 LeadStatus  @default(NEW)
   targetologist          User        @relation("LeadTargetologist", fields: [targetologistId], references: [id])
@@ -209,6 +212,8 @@ model Lead {
   clientId               String?
   product                Product?    @relation(fields: [productId], references: [id])
   productId              String?
+  offer                  Offer?      @relation(fields: [offerId], references: [id])
+  offerId                String?
   commissionTargetologist Decimal    @default(0)
   commissionOperator     Decimal     @default(0)
   createdAt              DateTime    @default(now())
@@ -221,17 +226,6 @@ model Lead {
   @@index([status, createdAt])
 }
 
-model Balance {
-  id          String   @id @default(uuid())
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String   @unique
-  holdBalance Decimal  @default(0)
-  mainBalance Decimal  @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  transactions BalanceTransaction[]
-}
-
 model BalanceTransaction {
   id          String               @id @default(uuid())
   user        User                 @relation(fields: [userId], references: [id])
@@ -239,8 +233,8 @@ model BalanceTransaction {
   lead        Lead?                @relation(fields: [leadId], references: [id])
   leadId      String?
   amount      Decimal
-  balanceType BalanceType
-  direction   TransactionDirection
+  type        TransactionDirection
+  status      BalanceType
   reason      String?
   createdAt   DateTime             @default(now())
 
@@ -252,15 +246,15 @@ model LeadStatusLog {
   id             String      @id @default(uuid())
   lead           Lead        @relation(fields: [leadId], references: [id])
   leadId         String
-  actor          User?       @relation("LeadStatusActor", fields: [actorId], references: [id])
-  actorId        String?
+  user           User?       @relation("LeadStatusActor", fields: [userId], references: [id])
+  userId         String?
   previousStatus LeadStatus?
   newStatus      LeadStatus
   comment        String
-  createdAt      DateTime    @default(now())
+  timestamp      DateTime    @default(now())
 
   @@index([leadId])
-  @@index([actorId])
+  @@index([userId])
 }
 
 model Payout {
@@ -288,8 +282,6 @@ model Campaign {
   status       String    @default("draft")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  creatives    Creative[]
-
   @@index([targetologId])
 }
 

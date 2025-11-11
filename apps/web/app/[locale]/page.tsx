@@ -1,28 +1,38 @@
 import Link from "next/link";
 import { Button, Card, CardContent, CardHeader, CardTitle } from "@cpamarket/ui";
-import { locales } from "../../src/i18n/locales";
-import { getTranslations } from "next-intl/server";
+import { createTranslation } from "next-i18next/server";
+import nextI18NextConfig from "../../next-i18next.config.mjs";
 
 export const revalidate = 3600;
 
-export default async function LandingPage({ params }: { params: { locale: string } }) {
-  const t = await getTranslations({ locale: params.locale, namespace: "landing" });
-  const common = await getTranslations({ locale: params.locale, namespace: "common" });
+const featureCount = 3;
+const faqCount = 2;
 
-  const features = t.raw("features.items") as Array<{ title: string; description: string }>;
-  const faqs = t.raw("faq.items") as Array<{ question: string; answer: string }>;
+export default async function LandingPage({ params }: { params: { locale: string } }) {
+  const { t } = await createTranslation(params.locale, "translation", nextI18NextConfig);
+  const locales = nextI18NextConfig.i18n.locales;
+
+  const features = Array.from({ length: featureCount }, (_, index) => ({
+    title: t(`landing.features.items.${index}.title`),
+    description: t(`landing.features.items.${index}.description`)
+  }));
+
+  const faqs = Array.from({ length: faqCount }, (_, index) => ({
+    question: t(`landing.faq.items.${index}.question`),
+    answer: t(`landing.faq.items.${index}.answer`)
+  }));
 
   return (
     <main className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white">
       <header className="border-b bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5">
-          <div className="text-xl font-bold text-slate-900">{common("brand")}</div>
+          <div className="text-xl font-bold text-slate-900">{t("common.brand")}</div>
           <nav className="flex items-center gap-4">
             <Link href={`/${params.locale}/auth/login`} className="text-sm text-slate-600 hover:text-slate-900">
-              {common("login")}
+              {t("common.login")}
             </Link>
             <Link href={`/${params.locale}/auth/register`}>
-              <Button size="sm">{common("register")}</Button>
+              <Button size="sm">{t("common.register")}</Button>
             </Link>
           </nav>
         </div>
@@ -34,15 +44,15 @@ export default async function LandingPage({ params }: { params: { locale: string
             <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
               CPA • RBAC • i18n
             </span>
-            <h1 className="text-4xl font-bold text-slate-900 sm:text-5xl">{t("title")}</h1>
-            <p className="text-lg text-slate-600">{t("subtitle")}</p>
+            <h1 className="text-4xl font-bold text-slate-900 sm:text-5xl">{t("landing.title")}</h1>
+            <p className="text-lg text-slate-600">{t("landing.subtitle")}</p>
             <div className="flex flex-wrap gap-3">
               <Link href={`/${params.locale}/auth/register`}>
-                <Button size="lg">{t("ctaPrimary")}</Button>
+                <Button size="lg">{t("landing.ctaPrimary")}</Button>
               </Link>
               <Link href="#features">
                 <Button size="lg" variant="outline">
-                  {t("ctaSecondary")}
+                  {t("landing.ctaSecondary")}
                 </Button>
               </Link>
             </div>
@@ -50,10 +60,8 @@ export default async function LandingPage({ params }: { params: { locale: string
           <div className="relative">
             <div className="absolute -inset-2 rounded-3xl bg-blue-200 blur-3xl opacity-50" />
             <div className="relative rounded-3xl border border-blue-100 bg-white p-8 shadow-xl">
-              <h3 className="text-lg font-semibold text-slate-900">{common("dashboard")}</h3>
-              <p className="mt-2 text-sm text-slate-500">
-                {t("features.items.0.description")}
-              </p>
+              <h3 className="text-lg font-semibold text-slate-900">{t("common.dashboard")}</h3>
+              <p className="mt-2 text-sm text-slate-500">{t("landing.features.items.0.description")}</p>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <Card className="border-dashed border-blue-200">
                   <CardHeader>
@@ -77,7 +85,7 @@ export default async function LandingPage({ params }: { params: { locale: string
         </div>
 
         <section id="features" className="space-y-6">
-          <h2 className="text-2xl font-semibold text-slate-900">{t("features.title")}</h2>
+          <h2 className="text-2xl font-semibold text-slate-900">{t("landing.features.title")}</h2>
           <div className="grid gap-6 md:grid-cols-3">
             {features.map((feature) => (
               <Card key={feature.title} className="border border-slate-200">
@@ -93,7 +101,7 @@ export default async function LandingPage({ params }: { params: { locale: string
         </section>
 
         <section className="space-y-6">
-          <h2 className="text-2xl font-semibold text-slate-900">{t("faq.title")}</h2>
+          <h2 className="text-2xl font-semibold text-slate-900">{t("landing.faq.title")}</h2>
           <div className="grid gap-4 md:grid-cols-2">
             {faqs.map((faq) => (
               <Card key={faq.question} className="border border-slate-200">
@@ -111,7 +119,9 @@ export default async function LandingPage({ params }: { params: { locale: string
 
       <footer className="border-t bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>© {new Date().getFullYear()} {common("brand")}. All rights reserved.</span>
+          <span>
+            © {new Date().getFullYear()} {t("common.brand")}. All rights reserved.
+          </span>
           <div className="flex gap-3">
             {locales.map((locale) => (
               <Link key={locale} href={`/${locale}`} className="hover:text-slate-900">

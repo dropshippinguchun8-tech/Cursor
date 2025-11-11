@@ -11,26 +11,26 @@ import { PaginationQueryDto } from "../../common/dto/pagination.dto";
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 
-  @Roles(UserRole.targetolog, UserRole.admin)
+  @Roles(UserRole.targetologist, UserRole.admin)
   @Get()
   async list(@Query() query: PaginationQueryDto, @CurrentUser() user: any, @Query("targetologId") targetologId?: string) {
     const effectiveTargetologId = user.role === UserRole.admin && targetologId ? targetologId : user.id;
     return this.campaignsService.list(query, effectiveTargetologId);
   }
 
-  @Roles(UserRole.targetolog, UserRole.admin)
+  @Roles(UserRole.targetologist, UserRole.admin)
   @Post()
   async create(@Body() dto: CreateCampaignDto, @CurrentUser() user: any) {
     return this.campaignsService.create(dto, user.id);
   }
 
-  @Roles(UserRole.targetolog, UserRole.admin)
+  @Roles(UserRole.targetologist, UserRole.admin)
   @Patch(":id")
   async update(@Param("id") id: string, @Body() dto: UpdateCampaignDto, @CurrentUser() user: any) {
     return this.campaignsService.update(id, dto, user.id);
   }
 
-  @Roles(UserRole.targetolog, UserRole.admin)
+  @Roles(UserRole.targetologist, UserRole.admin)
   @Delete(":id")
   async remove(@Param("id") id: string, @CurrentUser() user: any) {
     return this.campaignsService.remove(id, user.id);

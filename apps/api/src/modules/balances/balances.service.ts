@@ -10,28 +10,26 @@ export class BalancesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSummary(userId: string) {
-    const balance = await this.prisma.balance.findUnique({
-      where: { userId },
-      include: {
-        transactions: {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        holdBalance: true,
+        mainBalance: true,
+        balanceTransactions: {
           orderBy: { createdAt: "desc" },
           take: 20
         }
       }
     });
 
-    if (!balance) {
-      return {
-        holdBalance: 0,
-        mainBalance: 0,
-        transactions: []
-      };
+    if (!user) {
+      throw new NotFoundException("User not found");
     }
 
     return {
-      holdBalance: Number(balance.holdBalance),
-      mainBalance: Number(balance.mainBalance),
-      transactions: balance.transactions.map((transaction) => ({
+      holdBalance: Number(user.holdBalance),
+      mainBalance: Number(user.mainBalance),
+      transactions: user.balanceTransactions.map((transaction) => ({
         ...transaction,
         amount: Number(transaction.amount)
       }))
@@ -44,10 +42,11 @@ export class BalancesService {
       return;
     }
 
-    await tx.balance.upsert({
-      where: { userId },
-      create: { userId, holdBalance: decimalAmount },
-      update: { holdBalance: { increment: decimalAmount } }
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        holdBalance: { increment: decimalAmount }
+      }
     });
 
     await tx.balanceTransaction.create({
@@ -55,8 +54,8 @@ export class BalancesService {
         userId,
         leadId,
         amount: decimalAmount,
-        balanceType: BalanceType.hold,
-        direction: TransactionDirection.credit,
+        status: BalanceType.hold,
+        type: TransactionDirection.credit,
         reason
       }
     });
@@ -68,13 +67,16 @@ export class BalancesService {
       return;
     }
 
-    const balance = await tx.balance.findUnique({ where: { userId } });
-    if (!balance || balance.holdBalance.lt(decimalAmount)) {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { holdBalance: true }
+    });
+    if (!user || user.holdBalance.lt(decimalAmount)) {
       throw new BadRequestException("Hold balance is insufficient for transfer");
     }
 
-    await tx.balance.update({
-      where: { userId },
+    await tx.user.update({
+      where: { id: userId },
       data: {
         holdBalance: { decrement: decimalAmount },
         mainBalance: { increment: decimalAmount }
@@ -87,16 +89,16 @@ export class BalancesService {
           userId,
           leadId,
           amount: decimalAmount,
-          balanceType: BalanceType.hold,
-          direction: TransactionDirection.debit,
+          status: BalanceType.hold,
+          type: TransactionDirection.debit,
           reason: `Hold release by admin ${actorId}`
         },
         {
           userId,
           leadId,
           amount: decimalAmount,
-          balanceType: BalanceType.main,
-          direction: TransactionDirection.credit,
+          status: BalanceType.confirmed,
+          type: TransactionDirection.credit,
           reason: `Hold release by admin ${actorId}`
         }
       ]
@@ -122,8 +124,8 @@ export class BalancesService {
     const existingCredits = await this.prisma.balanceTransaction.findMany({
       where: {
         leadId,
-        balanceType: BalanceType.main,
-        direction: TransactionDirection.credit
+        status: BalanceType.confirmed,
+        type: TransactionDirection.credit
       }
     });
 

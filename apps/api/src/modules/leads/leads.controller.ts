@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from "@nestjs/common";
 import { LeadsService } from "./leads.service";
 import { CreateLeadDto } from "./dto/create-lead.dto";
 import { UpdateLeadDto } from "./dto/update-lead.dto";
@@ -15,6 +15,7 @@ import { Public } from "../../common/decorators/public.decorator";
 export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
 
+  @Roles(UserRole.admin, UserRole.operator, UserRole.targetologist, UserRole.client)
   @Get()
   async list(
     @Query() query: PaginationQueryDto,
@@ -39,22 +40,28 @@ export class LeadsController {
     );
   }
 
-  @Roles(UserRole.admin, UserRole.operator, UserRole.targetolog, UserRole.client)
+  @Roles(UserRole.admin, UserRole.operator, UserRole.targetologist, UserRole.client)
+  @Get(":id")
+  async getById(@Param("id") id: string, @CurrentUser() user: any) {
+    return this.leadsService.getById(id, user);
+  }
+
+  @Roles(UserRole.admin, UserRole.operator, UserRole.targetologist, UserRole.client)
   @Get(":id/logs")
   async logs(@Param("id") id: string) {
     return this.leadsService.getLogs(id);
   }
 
   @Roles(UserRole.admin)
-  @Post()
+  @Post("internal")
   async create(@Body() dto: CreateLeadDto, @CurrentUser() user: any) {
     return this.leadsService.create(dto, user.id);
   }
 
   @Public()
-  @Post("ref/:code")
-  async createFromReferral(@Param("code") code: string, @Body() dto: CreatePublicLeadDto) {
-    return this.leadsService.createFromReferral(code, dto);
+  @Post()
+  async createFromReferral(@Body() dto: CreatePublicLeadDto) {
+    return this.leadsService.createFromReferral(dto);
   }
 
   @Roles(UserRole.operator)
@@ -64,7 +71,7 @@ export class LeadsController {
   }
 
   @Roles(UserRole.admin, UserRole.operator, UserRole.client)
-  @Post(":id/status")
+  @Put(":id/status")
   async updateStatus(@Param("id") id: string, @Body() dto: UpdateLeadStatusDto, @CurrentUser() user: any) {
     return this.leadsService.updateStatus(id, dto, user);
   }

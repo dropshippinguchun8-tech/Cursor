@@ -10,7 +10,7 @@ process.env.DATABASE_URL = process.env.DATABASE_URL ?? "postgresql://postgres:po
 describe("StatsController (e2e)", () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let targetologToken: string;
+  let targetologistToken: string;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -25,16 +25,15 @@ describe("StatsController (e2e)", () => {
     await prisma.leadStatusLog.deleteMany();
     await prisma.balanceTransaction.deleteMany();
     await prisma.lead.deleteMany();
-    await prisma.balance.deleteMany();
     await prisma.product.deleteMany();
     await prisma.user.deleteMany();
 
-    const targetolog = await prisma.user.create({
+    const targetologist = await prisma.user.create({
       data: {
         email: "tg@test.com",
         username: "tg",
         passwordHash: await argon2.hash("Password123"),
-        role: "targetolog",
+        role: "targetologist",
         status: "active",
         referralCode: "test-ref"
       }
@@ -58,7 +57,7 @@ describe("StatsController (e2e)", () => {
         currency: "USD",
         stock: 10,
         images: [],
-        ownerId: targetolog.id,
+        ownerId: targetologist.id,
         commissionTargetologist: 20,
         commissionOperator: 15
       }
@@ -66,10 +65,10 @@ describe("StatsController (e2e)", () => {
 
     await prisma.lead.create({
       data: {
-        referralCode: targetolog.referralCode!,
+        referralCode: targetologist.referralCode!,
         customerName: "QA Test",
         customerPhone: "+998900000000",
-        targetologistId: targetolog.id,
+        targetologistId: targetologist.id,
         operatorId: operator.id,
         productId: product.id,
         commissionTargetologist: product.commissionTargetologist,
@@ -78,8 +77,8 @@ describe("StatsController (e2e)", () => {
         statusLogs: {
           create: [
             { newStatus: "NEW", comment: "Created for stats test" },
-            { newStatus: "OPERATOR_ASSIGNED", previousStatus: "NEW", actorId: operator.id, comment: "Claimed" },
-            { newStatus: "SOLD", previousStatus: "OPERATOR_ASSIGNED", actorId: operator.id, comment: "Closed" }
+            { newStatus: "OPERATOR_ASSIGNED", previousStatus: "NEW", userId: operator.id, comment: "Claimed" },
+            { newStatus: "SOLD", previousStatus: "OPERATOR_ASSIGNED", userId: operator.id, comment: "Closed" }
           ]
         }
       }
@@ -93,10 +92,10 @@ describe("StatsController (e2e)", () => {
       .post("/api/auth/login")
       .set("Cookie", cookie)
       .set("x-csrf-token", csrfToken)
-      .send({ email: targetolog.email, password: "Password123" })
+      .send({ email: targetologist.email, password: "Password123" })
       .expect(201);
 
-    targetologToken = login.body.data.accessToken;
+    targetologistToken = login.body.data.accessToken;
   });
 
   afterAll(async () => {
@@ -105,10 +104,10 @@ describe("StatsController (e2e)", () => {
   });
 
   it("returns totals for targetologist", async () => {
-    const response = await request(app.getHttpServer())
-      .get("/api/stats/totals")
-      .set("Authorization", `Bearer ${targetologToken}`)
-      .expect(200);
+      const response = await request(app.getHttpServer())
+        .get("/api/stats/totals")
+        .set("Authorization", `Bearer ${targetologistToken}`)
+        .expect(200);
 
     expect(response.body.data.leads).toBeGreaterThan(0);
     expect(response.body.data.revenue).toBeGreaterThan(0);

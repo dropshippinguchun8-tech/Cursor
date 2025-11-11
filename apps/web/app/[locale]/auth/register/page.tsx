@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
+import { useTranslation } from "react-i18next";
 import { Button, Card, CardContent, CardHeader, CardTitle, useToast } from "@cpamarket/ui";
 import { registerAction } from "./actions";
 
@@ -16,7 +16,7 @@ const schema = z
     email: z.string().email(),
     password: z.string().min(8),
     confirmPassword: z.string().min(8),
-    role: z.enum(["affiliate", "advertiser", "targetolog"])
+    role: z.enum(["affiliate", "advertiser", "targetologist"])
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords must match",
@@ -26,8 +26,7 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 export default function RegisterPage({ params }: { params: { locale: string } }) {
-  const t = useTranslations("auth");
-  const common = useTranslations("common");
+  const { t } = useTranslation();
   const { pushToast } = useToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -49,7 +48,7 @@ export default function RegisterPage({ params }: { params: { locale: string } })
           role: values.role
         });
         pushToast({
-          title: t("registerTitle"),
+          title: t("auth.registerTitle"),
           description: "Check your email to verify your account",
           variant: "success"
         });
@@ -68,8 +67,8 @@ export default function RegisterPage({ params }: { params: { locale: string } })
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-16">
       <Card className="w-full max-w-xl border border-slate-200 shadow-lg">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-2xl font-semibold text-slate-900">{t("registerTitle")}</CardTitle>
-          <p className="text-sm text-slate-500">{common("brand")}</p>
+          <CardTitle className="text-2xl font-semibold text-slate-900">{t("auth.registerTitle")}</CardTitle>
+          <p className="text-sm text-slate-500">{t("common.brand")}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 md:grid-cols-2">
@@ -84,7 +83,7 @@ export default function RegisterPage({ params }: { params: { locale: string } })
               ) : null}
             </div>
             <div className="space-y-2 md:col-span-1">
-              <label className="text-sm font-medium text-slate-700">{t("email")}</label>
+              <label className="text-sm font-medium text-slate-700">{t("auth.email")}</label>
               <input
                 type="email"
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -95,7 +94,7 @@ export default function RegisterPage({ params }: { params: { locale: string } })
               ) : null}
             </div>
             <div className="space-y-2 md:col-span-1">
-              <label className="text-sm font-medium text-slate-700">{t("password")}</label>
+              <label className="text-sm font-medium text-slate-700">{t("auth.password")}</label>
               <input
                 type="password"
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -106,7 +105,7 @@ export default function RegisterPage({ params }: { params: { locale: string } })
               ) : null}
             </div>
             <div className="space-y-2 md:col-span-1">
-              <label className="text-sm font-medium text-slate-700">{t("confirmPassword")}</label>
+              <label className="text-sm font-medium text-slate-700">{t("auth.confirmPassword")}</label>
               <input
                 type="password"
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -127,19 +126,19 @@ export default function RegisterPage({ params }: { params: { locale: string } })
               ) : null}
             </div>
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium text-slate-700">{t("role")}</label>
+              <label className="text-sm font-medium text-slate-700">{t("auth.role")}</label>
               <select
                 className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 {...form.register("role")}
               >
                 <option value="affiliate">Affiliate</option>
                 <option value="advertiser">Advertiser</option>
-                <option value="targetolog">Targetolog</option>
+                <option value="targetologist">Targetologist</option>
               </select>
             </div>
             <div className="md:col-span-2">
               <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? "..." : t("submit")}
+                {isPending ? "..." : t("auth.submit")}
               </Button>
             </div>
           </form>

@@ -44,7 +44,10 @@ export class UsersService {
       where: { id },
       include: {
         profile: true,
-        balance: true
+        balanceTransactions: {
+          orderBy: { createdAt: "desc" },
+          take: 20
+        }
       }
     });
     if (!user) {
