@@ -21,4 +21,8 @@ export class CreateLeadDto {
 
   @IsUUID()
   targetologistId: string;
+
+  @IsOptional()
+  @IsUUID()
+  clientId?: string;
 }

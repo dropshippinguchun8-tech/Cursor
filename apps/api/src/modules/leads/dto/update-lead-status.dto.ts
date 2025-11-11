@@ -1,4 +1,4 @@
-import { IsEnum, IsString } from "class-validator";
+import { IsEnum, IsString, MinLength } from "class-validator";
 import { LeadStatus } from "@prisma/client";
 
 export class UpdateLeadStatusDto {
@@ -6,5 +6,6 @@ export class UpdateLeadStatusDto {
   status: LeadStatus;
 
   @IsString()
+  @MinLength(2)
   comment: string;
 }

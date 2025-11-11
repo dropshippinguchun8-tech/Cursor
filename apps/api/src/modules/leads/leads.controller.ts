@@ -19,17 +19,18 @@ export class LeadsController {
   async list(
     @Query() query: PaginationQueryDto,
     @CurrentUser() user: any,
-    @Query("status") status?: LeadStatus,
+    @Query("status") status?: string,
     @Query("targetologistId") targetologistId?: string,
     @Query("operatorId") operatorId?: string,
     @Query("from") from?: string,
     @Query("to") to?: string
   ) {
+    const normalizedStatus = status ? (status.toUpperCase() as LeadStatus) : undefined;
     return this.leadsService.list(
       query,
       user,
       {
-        status,
+        status: normalizedStatus,
         targetologistId,
         operatorId,
         from,
@@ -38,6 +39,7 @@ export class LeadsController {
     );
   }
 
+  @Roles(UserRole.admin, UserRole.operator, UserRole.targetolog, UserRole.client)
   @Get(":id/logs")
   async logs(@Param("id") id: string) {
     return this.leadsService.getLogs(id);

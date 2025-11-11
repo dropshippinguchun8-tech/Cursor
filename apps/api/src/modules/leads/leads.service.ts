@@ -58,14 +58,16 @@ export class LeadsService {
 
     if (currentUser.role === UserRole.targetolog) {
       where.targetologistId = currentUser.id;
-    }
-    if (currentUser.role === UserRole.operator) {
-      where.OR = [
-        { operatorId: currentUser.id },
-        { operatorId: null, status: LeadStatus.NEW }
-      ];
-    }
-    if (currentUser.role === UserRole.client) {
+    } else if (currentUser.role === UserRole.operator) {
+      if (filters?.status) {
+        where.operatorId = currentUser.id;
+      } else {
+        where.OR = [
+          { operatorId: currentUser.id },
+          { operatorId: null, status: LeadStatus.NEW }
+        ];
+      }
+    } else if (currentUser.role === UserRole.client) {
       where.clientId = currentUser.id;
     }
 
@@ -77,6 +79,7 @@ export class LeadsService {
           product: { select: { id: true, title: true, commissionOperator: true, commissionTargetologist: true } },
           targetologist: { select: { id: true, username: true, email: true } },
           operator: { select: { id: true, username: true, email: true } },
+          client: { select: { id: true, username: true, email: true } },
           statusLogs: {
             orderBy: { createdAt: "desc" },
             take: 5
@@ -120,6 +123,16 @@ export class LeadsService {
       throw new BadRequestException("Targetologist not found");
     }
 
+    if (dto.clientId) {
+      const client = await this.prisma.user.findUnique({
+        where: { id: dto.clientId },
+        select: { id: true, role: true }
+      });
+      if (!client || client.role !== UserRole.client) {
+        throw new BadRequestException("Client not found");
+      }
+    }
+
     const product = dto.productId
       ? await this.prisma.product.findUnique({ where: { id: dto.productId } })
       : null;
@@ -133,6 +146,7 @@ export class LeadsService {
           customerEmail: dto.customerEmail,
           notes: dto.notes ? { text: dto.notes } : undefined,
           targetologistId: targetologist.id,
+          clientId: dto.clientId,
           productId: product?.id,
           commissionTargetologist: product?.commissionTargetologist ?? new Prisma.Decimal(0),
           commissionOperator: product?.commissionOperator ?? new Prisma.Decimal(0)
@@ -192,6 +206,11 @@ export class LeadsService {
       throw new BadRequestException("Only new leads can be claimed");
     }
 
+    const comment = dto.comment.trim();
+    if (!comment) {
+      throw new BadRequestException("Comment is required");
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const updated = await tx.lead.update({
         where: { id: dto.leadId },
@@ -201,8 +220,8 @@ export class LeadsService {
         }
       });
 
-      await this.recordStatus(tx, updated.id, operator.id, LeadStatus.NEW, LeadStatus.OPERATOR_ASSIGNED, dto.comment);
-      await this.audit.log(operator.id, "lead.claim", "Lead", updated.id, { comment: dto.comment });
+      await this.recordStatus(tx, updated.id, operator.id, LeadStatus.NEW, LeadStatus.OPERATOR_ASSIGNED, comment);
+      await this.audit.log(operator.id, "lead.claim", "Lead", updated.id, { comment });
       return updated;
     });
   }
@@ -212,6 +231,11 @@ export class LeadsService {
     dto: UpdateLeadStatusDto,
     actor: { id: string; role: UserRole }
   ) {
+    const comment = dto.comment?.trim();
+    if (!comment) {
+      throw new BadRequestException("Comment is required");
+    }
+
     const lead = await this.prisma.lead.findUnique({
       where: { id: leadId }
     });
@@ -228,12 +252,13 @@ export class LeadsService {
       const updated = await tx.lead.update({
         where: { id: leadId },
         data: {
-          status: dto.status
+          status: dto.status,
+          ...(actor.role === UserRole.client && !lead.clientId ? { clientId: actor.id } : {})
         }
       });
 
-      await this.recordStatus(tx, leadId, actor.id, lead.status, dto.status, dto.comment);
-      await this.audit.log(actor.id, "lead.status", "Lead", leadId, { from: lead.status, to: dto.status, comment: dto.comment });
+      await this.recordStatus(tx, leadId, actor.id, lead.status, dto.status, comment);
+      await this.audit.log(actor.id, "lead.status", "Lead", leadId, { from: lead.status, to: dto.status, comment });
 
       if (dto.status === LeadStatus.SOLD) {
         await this.handleSoldCommission(tx, updated);

@@ -29,9 +29,12 @@ export class BalancesService {
     }
 
     return {
-      holdBalance: balance.holdBalance,
-      mainBalance: balance.mainBalance,
-      transactions: balance.transactions
+      holdBalance: Number(balance.holdBalance),
+      mainBalance: Number(balance.mainBalance),
+      transactions: balance.transactions.map((transaction) => ({
+        ...transaction,
+        amount: Number(transaction.amount)
+      }))
     };
   }
 
