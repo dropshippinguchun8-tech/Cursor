@@ -21,10 +21,12 @@
       "cache": false
     },
     "db:migrate": {
-      "cache": false
+      "cache": false,
+      "dependsOn": ["build"]
     },
     "db:seed": {
-      "cache": false
+      "cache": false,
+      "dependsOn": ["db:migrate"]
     }
   }
 }
