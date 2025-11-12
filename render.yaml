@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: cpa-api
+    env: node
+    rootDir: apps/api
+    buildCommand: pnpm install --filter apps-api...
+    startCommand: pnpm --filter apps-api start:prod
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cpa-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+
+  - type: web
+    name: cpa-web
+    env: node
+    rootDir: apps/web
+    buildCommand: pnpm install --filter apps-web... && pnpm --filter apps-web build
+    startCommand: pnpm --filter apps-web start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://cpa-api.onrender.com
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
