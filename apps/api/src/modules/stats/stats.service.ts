@@ -96,7 +96,7 @@ export class StatsService {
 
   private buildLeadScope(user: { id: string; role: UserRole }) {
     switch (user.role) {
-      case UserRole.targetolog:
+      case UserRole.targetologist:
         return { targetologistId: user.id };
       case UserRole.operator:
         return { OR: [{ operatorId: user.id }, { status: LeadStatus.NEW }] };
@@ -109,7 +109,7 @@ export class StatsService {
 
   private async calculateRevenue(user: { id: string; role: UserRole }, status: LeadStatus) {
     const where = { ...this.buildLeadScope(user), status };
-    if (user.role === UserRole.targetolog) {
+    if (user.role === UserRole.targetologist) {
       const result = await this.prisma.lead.aggregate({
         where,
         _sum: { commissionTargetologist: true }

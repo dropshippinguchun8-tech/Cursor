@@ -56,7 +56,7 @@ export class LeadsService {
         : {})
     };
 
-    if (currentUser.role === UserRole.targetolog) {
+    if (currentUser.role === UserRole.targetologist) {
       where.targetologistId = currentUser.id;
     } else if (currentUser.role === UserRole.operator) {
       if (filters?.status) {
@@ -81,7 +81,7 @@ export class LeadsService {
           operator: { select: { id: true, username: true, email: true } },
           client: { select: { id: true, username: true, email: true } },
           statusLogs: {
-            orderBy: { createdAt: "desc" },
+            orderBy: { timestamp: "desc" },
             take: 5
           }
         },
@@ -108,10 +108,35 @@ export class LeadsService {
     return this.prisma.leadStatusLog.findMany({
       where: { leadId },
       include: {
-        actor: { select: { id: true, username: true, role: true } }
+        user: { select: { id: true, username: true, role: true } }
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { timestamp: "desc" }
     });
+  }
+
+  async getById(id: string, currentUser: { id: string; role: UserRole }) {
+    const lead = await this.prisma.lead.findUnique({
+      where: { id },
+      include: {
+        product: { select: { id: true, title: true, commissionOperator: true, commissionTargetologist: true } },
+        targetologist: { select: { id: true, username: true, email: true } },
+        operator: { select: { id: true, username: true, email: true } },
+        client: { select: { id: true, username: true, email: true } },
+        statusLogs: {
+          orderBy: { timestamp: "desc" }
+        }
+      }
+    });
+
+    if (!lead) {
+      throw new NotFoundException("Lead not found");
+    }
+
+    if (!this.canAccessLead(lead, currentUser)) {
+      throw new ForbiddenException("You are not allowed to view this lead");
+    }
+
+    return lead;
   }
 
   async create(dto: CreateLeadDto, actorId: string) {
@@ -119,7 +144,7 @@ export class LeadsService {
       where: { id: dto.targetologistId },
       select: { id: true, role: true, referralCode: true }
     });
-    if (!targetologist || targetologist.role !== UserRole.targetolog) {
+    if (!targetologist || targetologist.role !== UserRole.targetologist) {
       throw new BadRequestException("Targetologist not found");
     }
 
@@ -159,15 +184,16 @@ export class LeadsService {
     });
   }
 
-  async createFromReferral(code: string, dto: CreatePublicLeadDto) {
-    const targetologist = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ referralCode: code }, { id: code }],
-        role: UserRole.targetolog
-      }
+  async createFromReferral(dto: CreatePublicLeadDto) {
+    const targetologist = await this.prisma.user.findUnique({
+      where: { id: dto.targetologistId },
+      select: { id: true, referralCode: true, role: true }
     });
     if (!targetologist) {
       throw new NotFoundException("Referral link invalid");
+    }
+    if (targetologist.role !== UserRole.targetologist) {
+      throw new BadRequestException("Targetologist not found");
     }
 
     const product = dto.productId
@@ -216,7 +242,8 @@ export class LeadsService {
         where: { id: dto.leadId },
         data: {
           status: LeadStatus.OPERATOR_ASSIGNED,
-          operatorId: operator.id
+          operatorId: operator.id,
+          comment
         }
       });
 
@@ -253,6 +280,7 @@ export class LeadsService {
         where: { id: leadId },
         data: {
           status: dto.status,
+          comment,
           ...(actor.role === UserRole.client && !lead.clientId ? { clientId: actor.id } : {})
         }
       });
@@ -314,10 +342,29 @@ export class LeadsService {
     return [];
   }
 
+  private canAccessLead(
+    lead: { targetologistId: string; operatorId: string | null; clientId: string | null; status: LeadStatus },
+    user: { id: string; role: UserRole }
+  ): boolean {
+    if (user.role === UserRole.admin) {
+      return true;
+    }
+    if (user.role === UserRole.targetologist) {
+      return lead.targetologistId === user.id;
+    }
+    if (user.role === UserRole.operator) {
+      return lead.operatorId === user.id || (lead.status === LeadStatus.NEW && !lead.operatorId);
+    }
+    if (user.role === UserRole.client) {
+      return lead.clientId === user.id;
+    }
+    return false;
+  }
+
   private async recordStatus(
     tx: PrismaClientNS.TransactionClient,
     leadId: string,
-    actorId: string | null,
+    userId: string | null,
     previousStatus: LeadStatus | null,
     newStatus: LeadStatus,
     comment: string
@@ -325,7 +372,7 @@ export class LeadsService {
     await tx.leadStatusLog.create({
       data: {
         leadId,
-        actorId: actorId ?? undefined,
+        userId: userId ?? undefined,
         previousStatus: previousStatus ?? undefined,
         newStatus,
         comment

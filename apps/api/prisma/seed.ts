@@ -14,7 +14,6 @@ async function main() {
   await prisma.ticket.deleteMany();
   await prisma.campaign.deleteMany();
   await prisma.lead.deleteMany();
-  await prisma.balance.deleteMany();
   await prisma.product.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.user.deleteMany();
@@ -42,7 +41,7 @@ async function main() {
       email: "targetolog@cpamarket.uz",
       username: "targetolog",
       passwordHash,
-      role: UserRole.targetolog,
+      role: UserRole.targetologist,
       status: "active",
       referralCode: "tg-demo",
       profile: {
@@ -99,11 +98,11 @@ async function main() {
 
   const newLead = await prisma.lead.create({
     data: {
-      referralCode: targetolog.referralCode!,
+        referralCode: targetologist.referralCode!,
       customerName: "Bekzod Yusupov",
       customerPhone: "+998901112233",
       customerEmail: "bekzod@example.com",
-      targetologistId: targetolog.id,
+        targetologistId: targetologist.id,
       productId: product.id,
       commissionTargetologist: product.commissionTargetologist,
       commissionOperator: product.commissionOperator,
@@ -120,10 +119,10 @@ async function main() {
 
   const assignedLead = await prisma.lead.create({
     data: {
-      referralCode: targetolog.referralCode!,
+        referralCode: targetologist.referralCode!,
       customerName: "Dilnoza Karimova",
       customerPhone: "+998907778899",
-      targetologistId: targetolog.id,
+        targetologistId: targetologist.id,
       operatorId: operator.id,
       productId: product.id,
       commissionTargetologist: product.commissionTargetologist,
@@ -138,7 +137,7 @@ async function main() {
           {
             newStatus: "OPERATOR_ASSIGNED",
             previousStatus: "NEW",
-            actorId: operator.id,
+          userId: operator.id,
             comment: "Lead claimed by operator"
           }
         ]
@@ -148,10 +147,10 @@ async function main() {
 
   const acceptedLead = await prisma.lead.create({
     data: {
-      referralCode: targetolog.referralCode!,
+        referralCode: targetologist.referralCode!,
       customerName: "Javlon Sodiqov",
       customerPhone: "+998935551122",
-      targetologistId: targetolog.id,
+        targetologistId: targetologist.id,
       operatorId: operator.id,
       productId: product.id,
       commissionTargetologist: product.commissionTargetologist,
@@ -166,13 +165,13 @@ async function main() {
           {
             newStatus: "OPERATOR_ASSIGNED",
             previousStatus: "NEW",
-            actorId: operator.id,
+          userId: operator.id,
             comment: "Operator assigned"
           },
           {
             newStatus: "ACCEPTED",
             previousStatus: "OPERATOR_ASSIGNED",
-            actorId: operator.id,
+          userId: operator.id,
             comment: "Client confirmed availability"
           }
         ]
@@ -182,10 +181,10 @@ async function main() {
 
   const soldLead = await prisma.lead.create({
     data: {
-      referralCode: targetolog.referralCode!,
+        referralCode: targetologist.referralCode!,
       customerName: "Madina Ergasheva",
       customerPhone: "+998901234567",
-      targetologistId: targetolog.id,
+        targetologistId: targetologist.id,
       operatorId: operator.id,
       clientId: client.id,
       productId: product.id,
@@ -201,25 +200,25 @@ async function main() {
           {
             newStatus: "OPERATOR_ASSIGNED",
             previousStatus: "NEW",
-            actorId: operator.id,
+          userId: operator.id,
             comment: "Operator claimed the lead"
           },
           {
             newStatus: "ACCEPTED",
             previousStatus: "OPERATOR_ASSIGNED",
-            actorId: operator.id,
+          userId: operator.id,
             comment: "Client confirmed order"
           },
           {
             newStatus: "SENT",
             previousStatus: "ACCEPTED",
-            actorId: admin.id,
+          userId: admin.id,
             comment: "Order dispatched"
           },
           {
             newStatus: "SOLD",
             previousStatus: "SENT",
-            actorId: admin.id,
+          userId: admin.id,
             comment: "Order delivered and paid"
           }
         ]
@@ -227,38 +226,32 @@ async function main() {
     }
   });
 
-  await prisma.balance.create({
-    data: {
-      userId: targetolog.id,
-      holdBalance: product.commissionTargetologist,
-      mainBalance: 0
-    }
-  });
+    await prisma.user.update({
+      where: { id: targetologist.id },
+      data: { holdBalance: product.commissionTargetologist }
+    });
 
-  await prisma.balance.create({
-    data: {
-      userId: operator.id,
-      holdBalance: product.commissionOperator,
-      mainBalance: 0
-    }
-  });
+    await prisma.user.update({
+      where: { id: operator.id },
+      data: { holdBalance: product.commissionOperator }
+    });
 
-  await prisma.balanceTransaction.createMany({
+    await prisma.balanceTransaction.createMany({
     data: [
       {
-        userId: targetolog.id,
+        userId: targetologist.id,
         leadId: soldLead.id,
         amount: product.commissionTargetologist,
-        balanceType: "hold",
-        direction: "credit",
+        status: "hold",
+        type: "credit",
         reason: "Commission awaiting admin approval"
       },
       {
         userId: operator.id,
         leadId: soldLead.id,
         amount: product.commissionOperator,
-        balanceType: "hold",
-        direction: "credit",
+        status: "hold",
+        type: "credit",
         reason: "Commission awaiting admin approval"
       }
     ]
@@ -272,7 +265,7 @@ async function main() {
         payload: { message: "New lead available in the queue." }
       },
       {
-        userId: targetolog.id,
+        userId: targetologist.id,
         type: "system",
         payload: { message: "Your referral link: https://cpamarket.uz/lead/tg-demo" }
       }

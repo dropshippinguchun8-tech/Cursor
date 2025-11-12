@@ -1,6 +1,9 @@
 import { IsOptional, IsString, IsUUID } from "class-validator";
 
 export class CreatePublicLeadDto {
+  @IsUUID()
+  targetologistId: string;
+
   @IsString()
   customerName: string;
 

@@ -58,7 +58,7 @@ export class AuthService {
         passwordHash,
         role: dto.role as UserRole,
         status: "pending",
-        referralCode: dto.role === UserRole.targetolog ? uuid() : undefined,
+        referralCode: dto.role === UserRole.targetologist ? uuid() : undefined,
         profile: {
           create: {
             fullName: dto.fullName,

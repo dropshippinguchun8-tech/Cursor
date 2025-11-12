@@ -1,0 +1,125 @@
+{
+  "menu": {
+    "dashboard": "Boshqaruv paneli",
+    "leads": "Lidlar",
+    "balance": "Balans",
+    "settings": "Sozlamalar"
+  },
+  "common": {
+    "brand": "CPAMaRKeT.Uz",
+    "login": "Kirish",
+    "register": "Ro'yxatdan o'tish",
+    "logout": "Chiqish",
+    "dashboard": "Boshqaruv paneli",
+    "language": "Til",
+    "balance": "Balans",
+    "settings": "Sozlamalar",
+    "holdBalance": "Kutilayotgan balans",
+    "mainBalance": "Asosiy balans"
+  },
+  "landing": {
+    "title": "O'zbekistondagi raqamli marketing uchun CPA platforma",
+    "subtitle": "Targetolog, operator, admin va mijozlar uchun yagona boshqaruv paneli, real vaqt statistikasi va balans tizimi.",
+    "ctaPrimary": "Platformaga qo'shiling",
+    "ctaSecondary": "Imkoniyatlarni ko'rish",
+    "features": {
+      "title": "Asosiy imkoniyatlar",
+      "items": [
+        {
+          "title": "Rollarga mos ish stollari",
+          "description": "Admin, operator, targetolog va mijozlar uchun maxsus analitika va boshqaruv."
+        },
+        {
+          "title": "Lid statuslari va loglar",
+          "description": "Har bir lidning status tarixi, kommentariyasi va transaktsiyalari kuzatib boriladi."
+        },
+        {
+          "title": "Balans va to'lovlar",
+          "description": "Hold/Main balans, komissiya tasdiqlash va avtomatik to'lov jarayoni."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Ko'p so'raladigan savollar",
+      "items": [
+        {
+          "question": "Qanday ro'yxatdan o'taman?",
+          "answer": "Avval ro'yxatdan o'ting va profilingizni to'ldiring. Administrator sizning rol va ruxsatlaringizni tasdiqlaydi."
+        },
+        {
+          "question": "To'lovlar qachon tushadi?",
+          "answer": "Lid 'Sotildi' statusiga o'tgandan so'ng admin tasdiqlaydi va hold balansingiz asosiy balansga o'tkaziladi."
+        }
+      ]
+    }
+  },
+  "auth": {
+    "loginTitle": "Hisobingizga kiring",
+    "registerTitle": "Yangi hisob yarating",
+    "email": "Elektron pochta",
+    "password": "Parol",
+    "confirmPassword": "Parolni tasdiqlang",
+    "forgotPassword": "Parolni unutdingizmi?",
+    "verifyMessage": "Tasdiqlash havolasi elektron pochtangizga yuborildi. Havolani ochib hisobingizni faollashtiring va tizimga kiring.",
+    "submit": "Yuborish",
+    "role": "Rolni tanlang"
+  },
+  "status": {
+    "NEW": "Yangi",
+    "OPERATOR_ASSIGNED": "Operator belgilandi",
+    "ACCEPTED": "Qabul qilindi",
+    "ARCHIVED": "Arxivlandi",
+    "SENT": "Yuborildi",
+    "SOLD": "Sotildi"
+  },
+  "buttons": {
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "confirm": "Tasdiqlash",
+    "claim": "Olish",
+    "reject": "Rad etish",
+    "send": "Yuborish",
+    "markSold": "Sotildi"
+  },
+  "dashboard": {
+    "adminTitle": "Admin paneli",
+    "operatorTitle": "Operator navbati",
+    "targetologistTitle": "Targetolog ko'rinishi",
+    "clientTitle": "Mijoz buyurtmalari",
+    "leadQueue": "Yangi lidlar",
+    "myAssignments": "Mening lidlarim",
+    "allLeads": "Barcha lidlar",
+    "balances": "Balanslar",
+    "referralLink": "Referral havola",
+    "copy": "Nusxa olish",
+    "copied": "Nusxa olindi!",
+    "filters": "Filtrlar",
+    "statusFilter": "Status bo'yicha",
+    "operatorFilter": "Operator bo'yicha",
+    "targetologistFilter": "Targetolog bo'yicha",
+    "confirmOrder": "Buyurtmani tasdiqlash yoki bekor qilish"
+  },
+  "lead": {
+    "customerName": "Mijoz ismi",
+    "customerPhone": "Telefon",
+    "comment": "Izoh",
+    "product": "Mahsulot",
+    "operator": "Operator",
+    "targetologist": "Targetolog",
+    "client": "Klient",
+    "createdAt": "Yaratilgan vaqt",
+    "updatedAt": "Yangilangan",
+    "takeLead": "Lidni olish",
+    "statusHistory": "Status tarixi",
+    "addCommentPlaceholder": "Izoh kiriting...",
+    "actionRequired": "Izoh kiritish majburiy"
+  },
+  "notifications": {
+    "statusUpdated": "Status muvaffaqiyatli yangilandi",
+    "leadClaimed": "Lid sizga biriktirildi",
+    "error": "Xatolik yuz berdi"
+  },
+  "empty": {
+    "noData": "Ma'lumot topilmadi"
+  }
+}

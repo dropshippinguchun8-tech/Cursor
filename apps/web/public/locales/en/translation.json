@@ -1,0 +1,125 @@
+{
+  "menu": {
+    "dashboard": "Dashboard",
+    "leads": "Leads",
+    "balance": "Balance",
+    "settings": "Settings"
+  },
+  "common": {
+    "brand": "CPAMaRKeT.Uz",
+    "login": "Log in",
+    "register": "Register",
+    "logout": "Log out",
+    "dashboard": "Dashboard",
+    "language": "Language",
+    "balance": "Balance",
+    "settings": "Settings",
+    "holdBalance": "Hold balance",
+    "mainBalance": "Main balance"
+  },
+  "landing": {
+    "title": "CPA platform built for Uzbek marketing teams",
+    "subtitle": "One workspace for targetologists, operators, admins and clients with real-time analytics.",
+    "ctaPrimary": "Join the platform",
+    "ctaSecondary": "Explore features",
+    "features": {
+      "title": "Key capabilities",
+      "items": [
+        {
+          "title": "Role-based dashboards",
+          "description": "Dedicated views for admin, operator, targetologist and client."
+        },
+        {
+          "title": "Lead lifecycle tracking",
+          "description": "Status change history with comments, timestamps and actor identity."
+        },
+        {
+          "title": "Balance automation",
+          "description": "Hold/main wallets, commission approval and payout logs."
+        }
+      ]
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "items": [
+        {
+          "question": "How do I get access?",
+          "answer": "Sign up and wait for the administrator to approve your role and permissions."
+        },
+        {
+          "question": "When are commissions paid?",
+          "answer": "Once a lead is marked as Sold and approved by the admin, your hold balance moves to main balance."
+        }
+      ]
+    }
+  },
+  "auth": {
+    "loginTitle": "Sign in to your account",
+    "registerTitle": "Create a new account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "forgotPassword": "Forgot password?",
+    "verifyMessage": "We've sent a confirmation link to your email. Open it to activate your account and sign in.",
+    "submit": "Submit",
+    "role": "Choose a role"
+  },
+  "status": {
+    "NEW": "New",
+    "OPERATOR_ASSIGNED": "Operator assigned",
+    "ACCEPTED": "Accepted",
+    "ARCHIVED": "Archived",
+    "SENT": "Sent",
+    "SOLD": "Sold"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "claim": "Take",
+    "reject": "Reject",
+    "send": "Send",
+    "markSold": "Mark as sold"
+  },
+  "dashboard": {
+    "adminTitle": "Admin control",
+    "operatorTitle": "Operator queue",
+    "targetologistTitle": "Targetologist workspace",
+    "clientTitle": "Client orders",
+    "leadQueue": "New leads",
+    "myAssignments": "My leads",
+    "allLeads": "All leads",
+    "balances": "Balances",
+    "referralLink": "Referral link",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "filters": "Filters",
+    "statusFilter": "By status",
+    "operatorFilter": "By operator",
+    "targetologistFilter": "By targetologist",
+    "confirmOrder": "Confirm or reject your order"
+  },
+  "lead": {
+    "customerName": "Customer name",
+    "customerPhone": "Phone",
+    "comment": "Comment",
+    "product": "Product",
+    "operator": "Operator",
+    "targetologist": "Targetologist",
+    "client": "Client",
+    "createdAt": "Created at",
+    "updatedAt": "Updated",
+    "takeLead": "Take lead",
+    "statusHistory": "Status history",
+    "addCommentPlaceholder": "Enter a comment...",
+    "actionRequired": "Comment is required"
+  },
+  "notifications": {
+    "statusUpdated": "Status updated successfully",
+    "leadClaimed": "Lead assigned to you",
+    "error": "Something went wrong"
+  },
+  "empty": {
+    "noData": "No data found"
+  }
+}

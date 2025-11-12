@@ -16,19 +16,19 @@ export class CreativesController {
     return this.creativesService.list(query, offerId);
   }
 
-  @Roles(UserRole.admin, UserRole.targetolog, UserRole.advertiser)
+  @Roles(UserRole.admin, UserRole.targetologist, UserRole.advertiser)
   @Post()
   async create(@Body() dto: CreateCreativeDto, @CurrentUser() user: any) {
     return this.creativesService.create(dto, user.id);
   }
 
-  @Roles(UserRole.admin, UserRole.targetolog, UserRole.advertiser)
+  @Roles(UserRole.admin, UserRole.targetologist, UserRole.advertiser)
   @Patch(":id")
   async update(@Param("id") id: string, @Body() dto: UpdateCreativeDto, @CurrentUser() user: any) {
     return this.creativesService.update(id, dto, user.id);
   }
 
-  @Roles(UserRole.admin, UserRole.targetolog)
+  @Roles(UserRole.admin, UserRole.targetologist)
   @Delete(":id")
   async remove(@Param("id") id: string, @CurrentUser() user: any) {
     return this.creativesService.remove(id, user.id);
