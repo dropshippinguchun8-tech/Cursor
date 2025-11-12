@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cpamarket
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d cpamarket"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --recursive
+
+      - name: Generate Prisma Client
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/cpamarket?schema=public"
+        run: pnpm --filter apps-api exec prisma generate
+
+      - name: Prepare database
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/cpamarket?schema=public"
+        run: pnpm --filter apps-api exec prisma db push
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm --filter apps-api run build --dry-run
+
+      - name: Test API
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/cpamarket?schema=public"
+        run: pnpm --filter apps-api test

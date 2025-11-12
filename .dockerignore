@@ -1,0 +1,13 @@
+node_modules
+.turbo
+.pnpm-store
+Dockerfile*
+docker-compose.yml
+*.log
+.git
+.gitignore
+tmp
+dist
+.next
+coverage
+pnpm-lock.yaml

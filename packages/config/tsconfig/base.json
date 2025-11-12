@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Base",
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "ESNext",
+    "lib": ["ES2021", "DOM"],
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cpamarket/ui/*": ["../../packages/ui/src/*"],
+      "@cpamarket/utils/*": ["../../packages/utils/src/*"],
+      "@cpamarket/config/*": ["../../packages/config/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build"]
+}

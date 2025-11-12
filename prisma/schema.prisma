@@ -1,0 +1,378 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  operator
+  targetolog
+  client
+  advertiser
+  affiliate
+}
+
+enum UserStatus {
+  active
+  pending
+  suspended
+}
+
+enum OfferStatus {
+  active
+  paused
+  archived
+}
+
+enum LeadStatus {
+  NEW
+  OPERATOR_ASSIGNED
+  ACCEPTED
+  ARCHIVED
+  SENT
+  SOLD
+}
+
+enum BalanceType {
+  hold
+  main
+}
+
+enum TransactionDirection {
+  credit
+  debit
+}
+
+enum PayoutStatus {
+  pending
+  paid
+}
+
+enum CreativeType {
+  banner
+  video
+  text
+}
+
+enum TicketStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum NotificationType {
+  system
+  offer
+  payout
+  ticket
+}
+
+model User {
+  id               String            @id @default(uuid())
+  username         String            @unique
+  email            String            @unique
+  passwordHash     String
+  role             UserRole
+  status           UserStatus        @default(pending)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  lastLoginAt      DateTime?
+  twoFactorSecret  String?
+  referralCode     String?           @unique
+  profile          Profile?
+  offers           Offer[]           @relation("AdvertiserOffers")
+  products         Product[]
+  creatives        Creative[]        @relation("CreativeOwner")
+  clicks           Click[]           @relation("ClickAffiliate")
+  campaigns        Campaign[]        @relation("CampaignTargetolog")
+  payouts          Payout[]          @relation("PayoutAffiliate")
+  targetologistLeads Lead[]          @relation("LeadTargetologist")
+  operatorLeads    Lead[]            @relation("LeadOperator")
+  clientLeads      Lead[]            @relation("LeadClient")
+  statusLogs       LeadStatusLog[]   @relation("LeadStatusActor")
+  balance          Balance?
+  balanceTransactions BalanceTransaction[]
+  notifications    Notification[]
+  ticketsAuthored  Ticket[]          @relation("TicketAuthor")
+  ticketsAssigned  Ticket[]          @relation("TicketAssignee")
+  auditLogs        AuditLog[]        @relation("AuditActor")
+  refreshTokens    RefreshToken[]
+  emailVerifications EmailVerificationToken[]
+  passwordResets   PasswordResetToken[]
+
+  @@index([role])
+  @@index([status])
+}
+
+model Profile {
+  userId    String  @id
+  fullName  String
+  phone     String?
+  telegram  String?
+  language  String  @default("uz")
+  timezone  String  @default("Asia/Tashkent")
+  user      User    @relation(fields: [userId], references: [id])
+}
+
+model Offer {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  payout      Decimal      @default(0)
+  link        String
+  status      OfferStatus  @default(active)
+  advertiser  User         @relation("AdvertiserOffers", fields: [advertiserId], references: [id])
+  advertiserId String
+  vertical    String
+  geo         String
+  dailyCap    Int?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  creatives   Creative[]
+  clicks      Click[]
+  leads       Lead[]
+  products    Product[]
+
+  @@index([advertiserId])
+  @@index([status])
+  @@index([geo])
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  title       String
+  sku         String   @unique
+  price       Decimal  @default(0)
+  currency    String   @default("USD")
+  stock       Int      @default(0)
+  images      String[]
+  attributes  Json?
+  offer       Offer?   @relation(fields: [offerId], references: [id])
+  offerId     String?
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model Creative {
+  id        String       @id @default(uuid())
+  offer     Offer        @relation(fields: [offerId], references: [id])
+  offerId   String
+  type      CreativeType
+  url       String
+  meta      Json?
+  owner     User         @relation("CreativeOwner", fields: [ownerId], references: [id])
+  ownerId   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([offerId])
+}
+
+model Click {
+  id         String   @id @default(uuid())
+  user       User     @relation("ClickAffiliate", fields: [userId], references: [id])
+  userId     String
+  offer      Offer    @relation(fields: [offerId], references: [id])
+  offerId    String
+  ip         String
+  userAgent  String?
+  referer    String?
+  subId      String?
+  createdAt  DateTime @default(now())
+
+  @@index([offerId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Lead {
+  id                     String      @id @default(uuid())
+  referralCode           String
+  customerName           String
+  customerPhone          String
+  customerEmail          String?
+  notes                  Json?
+  status                 LeadStatus  @default(NEW)
+  targetologist          User        @relation("LeadTargetologist", fields: [targetologistId], references: [id])
+  targetologistId        String
+  operator               User?       @relation("LeadOperator", fields: [operatorId], references: [id])
+  operatorId             String?
+  client                 User?       @relation("LeadClient", fields: [clientId], references: [id])
+  clientId               String?
+  product                Product?    @relation(fields: [productId], references: [id])
+  productId              String?
+  commissionTargetologist Decimal    @default(0)
+  commissionOperator     Decimal     @default(0)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  statusLogs             LeadStatusLog[]
+  transactions           BalanceTransaction[]
+
+  @@index([targetologistId, status])
+  @@index([operatorId, status])
+  @@index([status, createdAt])
+}
+
+model Balance {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @unique
+  holdBalance Decimal  @default(0)
+  mainBalance Decimal  @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  transactions BalanceTransaction[]
+}
+
+model BalanceTransaction {
+  id          String               @id @default(uuid())
+  user        User                 @relation(fields: [userId], references: [id])
+  userId      String
+  lead        Lead?                @relation(fields: [leadId], references: [id])
+  leadId      String?
+  amount      Decimal
+  balanceType BalanceType
+  direction   TransactionDirection
+  reason      String?
+  createdAt   DateTime             @default(now())
+
+  @@index([userId, createdAt])
+  @@index([leadId])
+}
+
+model LeadStatusLog {
+  id             String      @id @default(uuid())
+  lead           Lead        @relation(fields: [leadId], references: [id])
+  leadId         String
+  actor          User?       @relation("LeadStatusActor", fields: [actorId], references: [id])
+  actorId        String?
+  previousStatus LeadStatus?
+  newStatus      LeadStatus
+  comment        String
+  createdAt      DateTime    @default(now())
+
+  @@index([leadId])
+  @@index([actorId])
+}
+
+model Payout {
+  id          String       @id @default(uuid())
+  affiliate   User         @relation("PayoutAffiliate", fields: [affiliateId], references: [id])
+  affiliateId String
+  period      String
+  amount      Decimal      @default(0)
+  status      PayoutStatus @default(pending)
+  paidAt      DateTime?
+  createdAt   DateTime     @default(now())
+
+  @@index([affiliateId, period])
+}
+
+model Campaign {
+  id           String    @id @default(uuid())
+  targetolog   User      @relation("CampaignTargetolog", fields: [targetologId], references: [id])
+  targetologId String
+  name         String
+  budget       Decimal   @default(0)
+  bid          Decimal   @default(0)
+  startAt      DateTime
+  endAt        DateTime?
+  status       String    @default("draft")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  creatives    Creative[]
+
+  @@index([targetologId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actor     User     @relation("AuditActor", fields: [actorId], references: [id])
+  actorId   String
+  action    String
+  entityType String
+  entityId  String
+  diff      Json?
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+}
+
+model Notification {
+  id        String          @id @default(uuid())
+  user      User            @relation(fields: [userId], references: [id])
+  userId    String
+  type      NotificationType
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime        @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Ticket {
+  id          String      @id @default(uuid())
+  author      User        @relation("TicketAuthor", fields: [authorId], references: [id])
+  authorId    String
+  assignee    User?       @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  assigneeId  String?
+  subject     String
+  body        String
+  status      TicketStatus @default(open)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([authorId])
+  @@index([assigneeId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tokenHash String
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model FileObject {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  url       String
+  bucket    String
+  mimeType  String
+  size      Int
+  meta      Json?
+  createdAt DateTime @default(now())
+}

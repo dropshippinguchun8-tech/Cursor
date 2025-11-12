@@ -1,0 +1,96 @@
+{
+  "common": {
+    "brand": "CPAMaRKeT.Uz",
+    "dashboard": "Dashboard",
+    "logout": "Log out",
+    "language": "Language",
+    "login": "Sign in",
+    "register": "Sign up",
+    "referralLink": "Referral link",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "balances": "Balances",
+    "holdBalance": "Hold balance",
+    "mainBalance": "Main balance",
+    "latestTransactions": "Latest transactions",
+    "noData": "No data available",
+    "status": "Status",
+    "comment": "Comment",
+    "updated": "Updated",
+    "actions": "Actions"
+  },
+  "landing": {
+    "title": "CPA platform built for Central Asia",
+    "subtitle": "Manage advertisers and affiliates in one secure monorepo stack with real-time analytics, RBAC and localized experiences.",
+    "ctaPrimary": "Get Started",
+    "ctaSecondary": "See Features",
+    "features": {
+      "title": "Key capabilities",
+      "items": [
+        {
+          "title": "Role-based portals",
+          "description": "Dedicated spaces for admin, operator, targetologist, advertiser and affiliate users."
+        },
+        {
+          "title": "Insights in minutes",
+          "description": "Track clicks, leads, approvals, EPC and eCPA with hourly & daily rollups."
+        },
+        {
+          "title": "Production ready",
+          "description": "Dockerized infrastructure using PostgreSQL, Redis, BullMQ queues and MinIO storage."
+        }
+      ]
+    },
+    "faq": {
+      "title": "FAQ",
+      "items": [
+        {
+          "question": "How do I onboard?",
+          "answer": "Create an account, verify your email and wait for admin approval to access dashboards."
+        },
+        {
+          "question": "How are payouts handled?",
+          "answer": "Monthly payout periods with workflow approvals ensure compliant affiliate payments."
+        }
+      ]
+    }
+  },
+  "auth": {
+    "loginTitle": "Access your account",
+    "registerTitle": "Create a new account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "resetPasswordTitle": "Reset password",
+    "forgotPassword": "Forgot password?",
+    "verifyMessage": "We sent you an email with a verification link. Open the link to activate your account, then sign in.",
+    "submit": "Submit",
+    "role": "Select role"
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {name}!",
+    "analytics": "Analytics",
+    "offers": "Offers",
+    "campaigns": "Campaigns",
+    "tickets": "Support tickets",
+    "leadsByStatus": "Leads by status",
+    "leadQueue": "Lead queue",
+    "myLeads": "My leads",
+    "recentLeads": "Recent leads",
+    "statusTimeline": "Status timeline",
+    "salesPerformance": "Sales performance",
+    "topProducts": "Top products",
+    "referralPerformance": "Referral performance",
+    "approvePayout": "Approve payout",
+    "confirmOrder": "Confirm order",
+    "rejectOrder": "Reject order"
+  },
+  "lead_status": {
+    "NEW": "New",
+    "OPERATOR_ASSIGNED": "Operator assigned",
+    "ACCEPTED": "Accepted",
+    "ARCHIVED": "Archived",
+    "SENT": "Sent",
+    "SOLD": "Sold"
+  }
+}

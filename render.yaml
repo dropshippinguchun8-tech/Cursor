@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: cpa-web
+    env: node
+    rootDir: .
+    buildCommand: |
+      corepack enable
+      pnpm install
+      pnpm --filter apps-web build
+    startCommand: pnpm --filter apps-web start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://cpa-api.onrender.com
+      - key: PORT
+        value: 3000
